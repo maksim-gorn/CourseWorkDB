@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Редактировать' if appliance else 'Добавить' }} технику{% endblock %}
+{% block content %}
+<h2>{{ 'Редактировать' if appliance else 'Добавить' }} технику</h2>
+<form method="post" class="row g-3 mt-2">
+    <div class="col-md-6">
+        <label class="form-label">Название</label>
+        <input name="name" class="form-control" value="{{ appliance.name if appliance else '' }}" required>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Категория</label>
+        <select name="category_id" class="form-select" required>
+            {% for c in categories %}
+            <option value="{{ c.id_category }}" {{ 'selected' if appliance and appliance.category_id == c.id_category else '' }}>{{ c.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Производитель</label>
+        <select name="manufacturer_id" class="form-select" required>
+            {% for m in manufacturers %}
+            <option value="{{ m.id_manufacturer }}" {{ 'selected' if appliance and appliance.manufacturer_id == m.id_manufacturer else '' }}>{{ m.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Срок службы (мес)</label>
+        <input name="service_life" type="number" class="form-control" value="{{ appliance.service_life if appliance else '' }}">
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Количество на складе</label>
+        <input name="stock_quantity" type="number" class="form-control" value="{{ appliance.stock_quantity if appliance else 0 }}">
+    </div>
+    <div class="col-12">
+        <button class="btn btn-success">{{ 'Сохранить' if appliance else 'Создать' }}</button>
+        <a href="{{ url_for('main.appliance_list') }}" class="btn btn-secondary">Отмена</a>
+    </div>
+</form>
+{% endblock %}

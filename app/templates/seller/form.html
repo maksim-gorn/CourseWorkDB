@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Редактировать' if seller else 'Добавить' }} продавца{% endblock %}
+{% block content %}
+<h2>{{ 'Редактировать' if seller else 'Добавить' }} продавца</h2>
+<form method="post" class="row g-3 mt-2">
+    <div class="col-md-4">
+        <label class="form-label">Имя</label>
+        <input name="first_name" class="form-control" value="{{ seller.first_name if seller else '' }}" required>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Фамилия</label>
+        <input name="last_name" class="form-control" value="{{ seller.last_name if seller else '' }}" required>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Email</label>
+        <input name="email" type="email" class="form-control" value="{{ seller.email if seller else '' }}" required>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Зарплата</label>
+        <input name="salary" type="number" step="0.01" class="form-control" value="{{ seller.salary if seller else '' }}">
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Дата найма</label>
+        <input name="hire_date" type="date" class="form-control" value="{{ seller.hire_date.strftime('%Y-%m-%d') if seller else '' }}" required>
+    </div>
+    <div class="col-12">
+        <button class="btn btn-success">{{ 'Сохранить' if seller else 'Создать' }}</button>
+        <a href="{{ url_for('main.seller_list') }}" class="btn btn-secondary">Отмена</a>
+    </div>
+</form>
+{% endblock %}

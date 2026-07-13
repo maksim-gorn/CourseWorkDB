@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Техника{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2><i class="bi bi-laptop"></i> Техника</h2>
+    <a href="{{ url_for('main.appliance_create') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Добавить</a>
+</div>
+<div class="table-responsive">
+<table class="table table-striped table-hover align-middle">
+<thead class="table-dark">
+    <tr>
+        <th>#</th>
+        <th>Название</th>
+        <th>Категория</th>
+        <th>Производитель</th>
+        <th>Срок службы (мес)</th>
+        <th>На складе</th>
+        <th>Опции</th>
+        <th>Действия</th>
+    </tr>
+</thead>
+<tbody>
+{% for a in appliances %}
+<tr>
+    <td>{{ a.id_model }}</td>
+    <td>{{ a.name }}</td>
+    <td>{{ a.category.name }}</td>
+    <td>{{ a.manufacturer.name }}</td>
+    <td>{{ a.service_life or '—' }}</td>
+    <td>{{ a.stock_quantity }}</td>
+    <td><a href="{{ url_for('main.extra_option_list', id=a.id_model) }}" class="btn btn-sm btn-outline-info">{{ a.extra_options.count() }} опций</a></td>
+    <td>
+        <a href="{{ url_for('main.appliance_edit', id=a.id_model) }}" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
+        <form method="post" action="{{ url_for('main.appliance_delete', id=a.id_model) }}" class="d-inline" onsubmit="return confirm('Удалить технику?')">
+            <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+        </form>
+    </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endblock %}

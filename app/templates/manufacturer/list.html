@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Производители{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2><i class="bi bi-building"></i> Производители</h2>
+    <a href="{{ url_for('main.manufacturer_create') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Добавить</a>
+</div>
+<table class="table table-striped table-hover align-middle">
+<thead class="table-dark">
+    <tr><th>#</th><th>Название</th><th>Юр. адрес</th><th>Техники</th><th>Действия</th></tr>
+</thead>
+<tbody>
+{% for m in manufacturers %}
+<tr>
+    <td>{{ m.id_manufacturer }}</td>
+    <td>{{ m.name }}</td>
+    <td>{{ m.legal_address or '—' }}</td>
+    <td>{{ m.appliances.count() }}</td>
+    <td>
+        <a href="{{ url_for('main.manufacturer_edit', id=m.id_manufacturer) }}" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
+        <form method="post" action="{{ url_for('main.manufacturer_delete', id=m.id_manufacturer) }}" class="d-inline" onsubmit="return confirm('Удалить производителя?')">
+            <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+        </form>
+    </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% endblock %}

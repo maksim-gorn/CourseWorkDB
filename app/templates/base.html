@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Панель управления магазином{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">
+                <i class="bi bi-shop"></i> ShopManager
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.appliance_list') }}"><i class="bi bi-laptop"></i> Техника</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.category_list') }}"><i class="bi bi-tags"></i> Категории</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.manufacturer_list') }}"><i class="bi bi-building"></i> Производители</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.supply_list') }}"><i class="bi bi-truck"></i> Поставки</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.seller_list') }}"><i class="bi bi-people"></i> Продавцы</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.sale_list') }}"><i class="bi bi-cart"></i> Продажи</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4">
+        {% for cat, msg in get_flashed_messages(with_categories=true) %}
+        <div class="alert alert-{{ cat }} alert-dismissible fade show" role="alert">
+            {{ msg }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

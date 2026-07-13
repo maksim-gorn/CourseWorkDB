@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Редактировать' if supply else 'Добавить' }} поставку{% endblock %}
+{% block content %}
+<h2>{{ 'Редактировать' if supply else 'Добавить' }} поставку</h2>
+<form method="post" class="row g-3 mt-2">
+    <div class="col-md-4">
+        <label class="form-label">Техника</label>
+        <select name="id_model" class="form-select" required>
+            {% for a in appliances %}
+            <option value="{{ a.id_model }}" {{ 'selected' if supply and supply.id_model == a.id_model else '' }}>{{ a.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Дата операции</label>
+        <input name="operation_date" type="datetime-local" class="form-control" value="{{ supply.operation_date.strftime('%Y-%m-%dT%H:%M') if supply else '' }}" required>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Цена за ед.</label>
+        <input name="unit_price" type="number" step="0.01" class="form-control" value="{{ supply.unit_price if supply else '' }}" required>
+    </div>
+    <div class="col-md-1">
+        <label class="form-label">Кол-во</label>
+        <input name="quantity" type="number" class="form-control" value="{{ supply.quantity if supply else '' }}" required>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Поставщик</label>
+        <input name="supplier" class="form-control" value="{{ supply.supplier if supply else '' }}">
+    </div>
+    <div class="col-12">
+        <button class="btn btn-success">{{ 'Сохранить' if supply else 'Создать' }}</button>
+        <a href="{{ url_for('main.supply_list') }}" class="btn btn-secondary">Отмена</a>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Редактировать' if sale else 'Оформить' }} продажу{% endblock %}
+{% block content %}
+<h2>{{ 'Редактировать' if sale else 'Оформить' }} продажу</h2>
+<form method="post" class="row g-3 mt-2">
+    <div class="col-md-4">
+        <label class="form-label">Техника</label>
+        <select name="id_model" class="form-select" required>
+            {% for a in appliances %}
+            <option value="{{ a.id_model }}" {{ 'selected' if sale and sale.id_model == a.id_model else '' }}>{{ a.name }} (в наличии: {{ a.stock_quantity }})</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Продавец</label>
+        <select name="id_seller" class="form-select" required>
+            {% for sel in sellers %}
+            <option value="{{ sel.id_seller }}" {{ 'selected' if sale and sale.id_seller == sel.id_seller else '' }}>{{ sel.first_name }} {{ sel.last_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Цена продажи</label>
+        <input name="sale_price" type="number" step="0.01" class="form-control" value="{{ sale.sale_price if sale else '' }}" required>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Дата продажи</label>
+        <input name="sale_date" type="datetime-local" class="form-control" value="{{ sale.sale_date.strftime('%Y-%m-%dT%H:%M') if sale else '' }}" required>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Срок гарантии (мес)</label>
+        <input name="warranty_period" type="number" class="form-control" value="{{ sale.warranty_period if sale else '' }}">
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Номер талона</label>
+        <input name="coupon_number" class="form-control" value="{{ sale.coupon_number if sale else '' }}">
+    </div>
+    <div class="col-12">
+        <button class="btn btn-success">{{ 'Сохранить' if sale else 'Оформить продажу' }}</button>
+        <a href="{{ url_for('main.sale_list') }}" class="btn btn-secondary">Отмена</a>
+    </div>
+</form>
+{% endblock %}

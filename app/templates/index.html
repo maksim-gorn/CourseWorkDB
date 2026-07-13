@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Главная — Панель управления магазином{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-speedometer2"></i> Дашборд</h2>
+<div class="row g-4">
+    <div class="col-md-4 col-lg-3">
+        <div class="card text-bg-primary h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-laptop display-4"></i>
+                <h3 class="mt-2">{{ stats.appliances }}</h3>
+                <p class="mb-0">Единиц техники</p>
+                <a href="{{ url_for('main.appliance_list') }}" class="stretched-link text-white"></a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3">
+        <div class="card text-bg-success h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-tags display-4"></i>
+                <h3 class="mt-2">{{ stats.categories }}</h3>
+                <p class="mb-0">Категорий</p>
+                <a href="{{ url_for('main.category_list') }}" class="stretched-link text-white"></a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3">
+        <div class="card text-bg-info h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-building display-4"></i>
+                <h3 class="mt-2">{{ stats.manufacturers }}</h3>
+                <p class="mb-0">Производителей</p>
+                <a href="{{ url_for('main.manufacturer_list') }}" class="stretched-link text-white"></a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3">
+        <div class="card text-bg-warning h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-truck display-4"></i>
+                <h3 class="mt-2">{{ stats.supplies }}</h3>
+                <p class="mb-0">Поставок</p>
+                <a href="{{ url_for('main.supply_list') }}" class="stretched-link text-white"></a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3">
+        <div class="card text-bg-secondary h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-people display-4"></i>
+                <h3 class="mt-2">{{ stats.sellers }}</h3>
+                <p class="mb-0">Продавцов</p>
+                <a href="{{ url_for('main.seller_list') }}" class="stretched-link text-white"></a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3">
+        <div class="card text-bg-danger h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-cart display-4"></i>
+                <h3 class="mt-2">{{ stats.sales }}</h3>
+                <p class="mb-0">Продаж</p>
+                <a href="{{ url_for('main.sale_list') }}" class="stretched-link text-white"></a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3">
+        <div class="card text-bg-dark h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-gear display-4"></i>
+                <h3 class="mt-2">{{ stats.options }}</h3>
+                <p class="mb-0">Доп. опций</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
