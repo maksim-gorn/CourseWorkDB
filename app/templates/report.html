@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Отчёт о реализации{% endblock %}
+{% block content %}
+<h2><i class="bi bi-file-earmark-bar-graph"></i> Отчёт о реализации</h2>
+
+<form method="post" class="row g-3 mt-2 mb-4" id="reportForm">
+    <div class="col-md-4">
+        <label class="form-label">Модель техники</label>
+        <select name="appliance_id" class="form-select" required>
+            <option value="">— выберите —</option>
+            {% for a in appliances %}
+            <option value="{{ a.id_model }}" {{ 'selected' if selected_appliance and selected_appliance.id_model == a.id_model else '' }}>{{ a.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Год</label>
+        <select name="year" class="form-select" required>
+            <option value="">— год —</option>
+            {% for y in range(2026, 2020, -1) %}
+            <option value="{{ y }}" {{ 'selected' if selected_year == y else '' }}>{{ y }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i> Сформировать</button>
+    </div>
+</form>
+
+{% if result %}
+<div class="card shadow-sm">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-file-text"></i> О реализации {{ result.model }} в {{ result.year }} г.</span>
+        <form method="post" action="{{ url_for('main.report_pdf') }}" class="d-inline" id="pdfForm">
+            <input type="hidden" name="appliance_id" value="{{ selected_appliance.id_model }}">
+            <input type="hidden" name="year" value="{{ selected_year }}">
+            <button type="submit" class="btn btn-sm btn-light"><i class="bi bi-download"></i> Скачать PDF</button>
+        </form>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-bordered mb-0">
+            <thead class="table-secondary">
+                <tr>
+                    <th>Модель</th>
+                    <th>Фирма-производитель</th>
+                    <th class="text-center">Кол-во приобретённого</th>
+                    <th class="text-center">Кол-во проданного</th>
+                    <th class="text-end">Сумма приобретённого</th>
+                    <th class="text-end">Сумма проданного</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ result.model }}</td>
+                    <td>{{ result.manufacturer }}</td>
+                    <td class="text-center">{{ result.purchased_qty }}</td>
+                    <td class="text-center">{{ result.sold_qty }}</td>
+                    <td class="text-end">{{ '%.2f'|format(result.purchased_sum) }} ₽</td>
+                    <td class="text-end">{{ '%.2f'|format(result.sold_sum) }} ₽</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
