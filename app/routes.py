@@ -30,7 +30,7 @@ def index():
         'options': ExtraOption.query.count(),
     }
 
-    # данные для круговой диаграммы - сколько продано штук в каждой категории
+    # диаграмма сколько продано штук в каждой категории
     sales_by_category = (
         db.session.query(Category.name, func.count(Sale.id_sale))
         .select_from(Sale)
@@ -40,7 +40,7 @@ def index():
         .all()
     )
 
-    # данные для круговой диаграммы - сумма продаж по каждой категории
+    # диаграмма сумма продаж по каждой категории
     revenue_by_category = (
         db.session.query(Category.name, func.sum(Sale.sale_price))
         .select_from(Sale)
