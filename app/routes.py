@@ -6,6 +6,7 @@ from app.models import (
     Supply, Seller, Sale
 )
 from datetime import datetime
+from sqlalchemy import func
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -28,7 +29,32 @@ def index():
         'sales': Sale.query.count(),
         'options': ExtraOption.query.count(),
     }
-    return render_template('index.html', stats=stats)
+
+    # Chart 1: Продажи по категориям (штук)
+    sales_by_category = (
+        db.session.query(Category.name, func.count(Sale.id_sale))
+        .select_from(Sale)
+        .join(Appliance, Sale.id_model == Appliance.id_model)
+        .join(Category, Appliance.category_id == Category.id_category)
+        .group_by(Category.id_category)
+        .all()
+    )
+
+    # Chart 2: Доход по категориям (сумма продаж)
+    revenue_by_category = (
+        db.session.query(Category.name, func.sum(Sale.sale_price))
+        .select_from(Sale)
+        .join(Appliance, Sale.id_model == Appliance.id_model)
+        .join(Category, Appliance.category_id == Category.id_category)
+        .group_by(Category.id_category)
+        .all()
+    )
+
+    return render_template('index.html', stats=stats,
+                           sales_chart_labels=[r[0] for r in sales_by_category],
+                           sales_chart_data=[r[1] for r in sales_by_category],
+                           revenue_chart_labels=[r[0] for r in revenue_by_category],
+                           revenue_chart_data=[r[1] for r in revenue_by_category])
 
 
 # ══════════════════════════════════════════════

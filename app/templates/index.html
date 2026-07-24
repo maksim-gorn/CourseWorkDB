@@ -1,66 +1,111 @@
 {% extends 'base.html' %}
 {% block title %}Главная — Панель управления магазином{% endblock %}
 {% block content %}
-<h2 class="mb-4"><i class="bi bi-speedometer2"></i> Дашборд</h2>
-<div class="row g-4">
-    <div class="col-md-4 col-lg-3">
-        <div class="card text-bg-primary h-100">
+<h2 class="mb-3 fs-4 fw-semibold"><i class="bi bi-speedometer2"></i> Дашборд</h2>
+
+<div class="row g-2 mb-3">
+    <div class="col-4 col-md-2">
+        <div class="card stat-card h-100" onclick="location.href='{{ url_for('main.appliance_list') }}'">
             <div class="card-body text-center">
-                <i class="bi bi-laptop display-4"></i>
-                <h3 class="mt-2">{{ stats.appliances }}</h3>
-                <p class="mb-0">Единиц техники</p>
-                <a href="{{ url_for('main.appliance_list') }}" class="stretched-link text-white"></a>
+                <i class="bi bi-laptop text-primary"></i>
+                <h3>{{ stats.appliances }}</h3>
+                <p>Техника</p>
             </div>
         </div>
     </div>
-    <div class="col-md-4 col-lg-3">
-        <div class="card text-bg-success h-100">
+    <div class="col-4 col-md-2">
+        <div class="card stat-card h-100" onclick="location.href='{{ url_for('main.category_list') }}'">
             <div class="card-body text-center">
-                <i class="bi bi-tags display-4"></i>
-                <h3 class="mt-2">{{ stats.categories }}</h3>
-                <p class="mb-0">Категорий</p>
-                <a href="{{ url_for('main.category_list') }}" class="stretched-link text-white"></a>
+                <i class="bi bi-tags text-success"></i>
+                <h3>{{ stats.categories }}</h3>
+                <p>Категории</p>
             </div>
         </div>
     </div>
-    <div class="col-md-4 col-lg-3">
-        <div class="card text-bg-info h-100">
+    <div class="col-4 col-md-2">
+        <div class="card stat-card h-100" onclick="location.href='{{ url_for('main.manufacturer_list') }}'">
             <div class="card-body text-center">
-                <i class="bi bi-building display-4"></i>
-                <h3 class="mt-2">{{ stats.manufacturers }}</h3>
-                <p class="mb-0">Производителей</p>
-                <a href="{{ url_for('main.manufacturer_list') }}" class="stretched-link text-white"></a>
+                <i class="bi bi-building text-info"></i>
+                <h3>{{ stats.manufacturers }}</h3>
+                <p>Производители</p>
             </div>
         </div>
     </div>
-    <div class="col-md-4 col-lg-3">
-        <div class="card text-bg-warning h-100">
+    <div class="col-4 col-md-2">
+        <div class="card stat-card h-100" onclick="location.href='{{ url_for('main.supply_list') }}'">
             <div class="card-body text-center">
-                <i class="bi bi-truck display-4"></i>
-                <h3 class="mt-2">{{ stats.supplies }}</h3>
-                <p class="mb-0">Поставок</p>
-                <a href="{{ url_for('main.supply_list') }}" class="stretched-link text-white"></a>
+                <i class="bi bi-truck text-warning"></i>
+                <h3>{{ stats.supplies }}</h3>
+                <p>Поставки</p>
             </div>
         </div>
     </div>
-    <div class="col-md-4 col-lg-3">
-        <div class="card text-bg-secondary h-100">
+    <div class="col-4 col-md-2">
+        <div class="card stat-card h-100" onclick="location.href='{{ url_for('main.seller_list') }}'">
             <div class="card-body text-center">
-                <i class="bi bi-people display-4"></i>
-                <h3 class="mt-2">{{ stats.sellers }}</h3>
-                <p class="mb-0">Продавцов</p>
-                <a href="{{ url_for('main.seller_list') }}" class="stretched-link text-white"></a>
+                <i class="bi bi-people text-secondary"></i>
+                <h3>{{ stats.sellers }}</h3>
+                <p>Продавцы</p>
             </div>
         </div>
     </div>
-    <div class="col-md-4 col-lg-3">
-        <div class="card text-bg-danger h-100">
+    <div class="col-4 col-md-2">
+        <div class="card stat-card h-100" onclick="location.href='{{ url_for('main.sale_list') }}'">
             <div class="card-body text-center">
-                <i class="bi bi-cart display-4"></i>
-                <h3 class="mt-2">{{ stats.sales }}</h3>
-                <p class="mb-0">Продаж</p>
-                <a href="{{ url_for('main.sale_list') }}" class="stretched-link text-white"></a>
+                <i class="bi bi-cart text-danger"></i>
+                <h3>{{ stats.sales }}</h3>
+                <p>Продажи</p>
             </div>
         </div>
     </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white border-bottom d-flex align-items-center gap-2 py-2">
+                <i class="bi bi-pie-chart text-secondary"></i>
+                <span class="fs-6">Продажи по категориям (шт.)</span>
+            </div>
+            <div class="card-body p-3 chart-container">
+                <canvas id="chartSales"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white border-bottom d-flex align-items-center gap-2 py-2">
+                <i class="bi bi-pie-chart text-secondary"></i>
+                <span class="fs-6">Доход по категориям</span>
+            </div>
+            <div class="card-body p-3 chart-container">
+                <canvas id="chartRevenue"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+const palette = ['#3b82f6','#22c55e','#eab308','#ef4444','#06b6d4','#8b5cf6','#f97316','#14b8a6'];
+
+const salesLabels = {{ sales_chart_labels|tojson }};
+const salesData   = {{ sales_chart_data|tojson }};
+
+new Chart(document.getElementById('chartSales'), {
+    type: 'pie',
+    data: { labels: salesLabels, datasets: [{ data: salesData, backgroundColor: palette, borderColor: '#fff', borderWidth: 2 }] },
+    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, font: { size: 11 } } } } }
+});
+
+const revLabels = {{ revenue_chart_labels|tojson }};
+const revData   = {{ revenue_chart_data|tojson }};
+
+new Chart(document.getElementById('chartRevenue'), {
+    type: 'pie',
+    data: { labels: revLabels, datasets: [{ data: revData, backgroundColor: palette, borderColor: '#fff', borderWidth: 2 }] },
+    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, font: { size: 11 } } }, tooltip: { callbacks: { label: ctx => ctx.raw.toLocaleString('ru-RU') + ' ₽' } } } }
+});
+</script>
 {% endblock %}
