@@ -14,7 +14,7 @@ def create_app():
     migrate.init_app(app, db)
 
     with app.app_context():
-        from app import models  # noqa — ensure models are loaded
+        from app import models  # noqa - подгружаем модели чтобы они зарегистрировались
 
     from app.routes import bp
     app.register_blueprint(bp)

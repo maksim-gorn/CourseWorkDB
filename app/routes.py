@@ -6,6 +6,7 @@ from app.models import (
     Supply, Seller, Sale
 )
 from datetime import datetime
+from sqlalchemy import func
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -16,7 +17,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 bp = Blueprint('main', __name__)
 
 
-# ── Главная ──────────────────────────────────
+# главная страница с дашбордом
 @bp.route('/')
 def index():
     stats = {
@@ -28,12 +29,35 @@ def index():
         'sales': Sale.query.count(),
         'options': ExtraOption.query.count(),
     }
-    return render_template('index.html', stats=stats)
+
+    # диаграмма сколько продано штук в каждой категории
+    sales_by_category = (
+        db.session.query(Category.name, func.count(Sale.id_sale))
+        .select_from(Sale)
+        .join(Appliance, Sale.id_model == Appliance.id_model)
+        .join(Category, Appliance.category_id == Category.id_category)
+        .group_by(Category.id_category)
+        .all()
+    )
+
+    # диаграмма сумма продаж по каждой категории
+    revenue_by_category = (
+        db.session.query(Category.name, func.sum(Sale.sale_price))
+        .select_from(Sale)
+        .join(Appliance, Sale.id_model == Appliance.id_model)
+        .join(Category, Appliance.category_id == Category.id_category)
+        .group_by(Category.id_category)
+        .all()
+    )
+
+    return render_template('index.html', stats=stats,
+                           sales_chart_labels=[r[0] for r in sales_by_category],
+                           sales_chart_data=[r[1] for r in sales_by_category],
+                           revenue_chart_labels=[r[0] for r in revenue_by_category],
+                           revenue_chart_data=[r[1] for r in revenue_by_category])
 
 
-# ══════════════════════════════════════════════
-#  ТЕХНИКА (Appliance)
-# ══════════════════════════════════════════════
+# CRUD для техники
 @bp.route('/appliances')
 def appliance_list():
     appliances = Appliance.query.order_by(Appliance.name).all()
@@ -85,9 +109,7 @@ def appliance_delete(id):
     return redirect(url_for('main.appliance_list'))
 
 
-# ══════════════════════════════════════════════
-#  КАТЕГОРИИ
-# ══════════════════════════════════════════════
+# CRUD для категорий
 @bp.route('/categories')
 def category_list():
     categories = Category.query.order_by(Category.name).all()
@@ -136,9 +158,7 @@ def category_delete(id):
     return redirect(url_for('main.category_list'))
 
 
-# ══════════════════════════════════════════════
-#  ПРОИЗВОДИТЕЛИ
-# ══════════════════════════════════════════════
+# CRUD для производителей
 @bp.route('/manufacturers')
 def manufacturer_list():
     manufacturers = Manufacturer.query.order_by(Manufacturer.name).all()
@@ -183,9 +203,7 @@ def manufacturer_delete(id):
     return redirect(url_for('main.manufacturer_list'))
 
 
-# ══════════════════════════════════════════════
-#  ДОПОЛНИТЕЛЬНЫЕ ОПЦИИ (привязаны к технике)
-# ══════════════════════════════════════════════
+# доп. опции - управляются в контексте конкретной модели техники
 @bp.route('/appliances/<int:id>/options')
 def extra_option_list(id):
     appliance = Appliance.query.get_or_404(id)
@@ -197,7 +215,6 @@ def extra_option_add(id):
     appliance = Appliance.query.get_or_404(id)
     option_name = request.form.get('option', '').strip()
     if option_name:
-        # check if already exists
         existing = ExtraOption.query.filter_by(id_model=id, option=option_name).first()
         if existing:
             flash('Такая опция уже существует', 'warning')
@@ -217,9 +234,7 @@ def extra_option_delete(id, option):
     return redirect(url_for('main.extra_option_list', id=id))
 
 
-# ══════════════════════════════════════════════
-#  ПОСТАВКИ
-# ══════════════════════════════════════════════
+# CRUD для поставок - пополняют склад
 @bp.route('/supplies')
 def supply_list():
     supplies = Supply.query.order_by(Supply.operation_date.desc()).all()
@@ -237,7 +252,7 @@ def supply_create():
             quantity=request.form.get('quantity', type=int),
             supplier=request.form.get('supplier'),
         )
-        # Update stock
+        # при добавлении поставки увеличиваем количество на складе
         app = Appliance.query.get(s.id_model)
         if app:
             app.stock_quantity = (app.stock_quantity or 0) + s.quantity
@@ -259,7 +274,7 @@ def supply_edit(id):
         s.unit_price = request.form.get('unit_price', type=float)
         s.quantity = request.form.get('quantity', type=int)
         s.supplier = request.form.get('supplier')
-        # Adjust stock
+        # корректируем склад - вычитаем старое количество, добавляем новое
         app = Appliance.query.get(s.id_model)
         if app:
             app.stock_quantity = (app.stock_quantity or 0) - old_qty + s.quantity
@@ -281,9 +296,7 @@ def supply_delete(id):
     return redirect(url_for('main.supply_list'))
 
 
-# ══════════════════════════════════════════════
-#  ПРОДАВЦЫ
-# ══════════════════════════════════════════════
+# CRUD для продавцов
 @bp.route('/sellers')
 def seller_list():
     sellers = Seller.query.order_by(Seller.last_name, Seller.first_name).all()
@@ -334,9 +347,7 @@ def seller_delete(id):
     return redirect(url_for('main.seller_list'))
 
 
-# ══════════════════════════════════════════════
-#  ПРОДАЖИ
-# ══════════════════════════════════════════════
+# CRUD для продаж - списывают товар со склада
 @bp.route('/sales')
 def sale_list():
     sales = Sale.query.order_by(Sale.sale_date.desc()).all()
@@ -363,6 +374,7 @@ def sale_create():
             warranty_period=request.form.get('warranty_period', type=int),
             coupon_number=request.form.get('coupon_number'),
         )
+        # списываем одну единицу товара со склада
         app.stock_quantity = (app.stock_quantity or 0) - qty
         db.session.add(s)
         db.session.commit()
@@ -385,7 +397,7 @@ def sale_edit(id):
         s.warranty_period = request.form.get('warranty_period', type=int)
         s.coupon_number = request.form.get('coupon_number')
 
-        # Restore stock for old model, deduct for new
+        # возвращаем товар на старый склад и списываем с нового
         old_app = Appliance.query.get(old_model)
         if old_app:
             old_app.stock_quantity = (old_app.stock_quantity or 0) + 1
@@ -405,7 +417,7 @@ def sale_edit(id):
 @bp.route('/sales/<int:id>/delete', methods=['POST'])
 def sale_delete(id):
     s = Sale.query.get_or_404(id)
-    # Restore stock
+    # возвращаем товар на склад при отмене продажи
     app = Appliance.query.get(s.id_model)
     if app:
         app.stock_quantity = (app.stock_quantity or 0) + 1
@@ -415,32 +427,18 @@ def sale_delete(id):
     return redirect(url_for('main.sale_list'))
 
 
-# ══════════════════════════════════════════════
-#  ОТЧЁТ
-# ══════════════════════════════════════════════
+# отчёт о реализации модели за выбранный год
 def _find_font():
-    """Try to register a TTF font that supports Cyrillic for reportlab."""
+    """ищет ttf-шрифт с кириллицей на системе для reportlab"""
     import os
     candidates = [
-        # Windows
         r'C:\Windows\Fonts\arial.ttf',
-        r'C:\Windows\Fonts\arialbd.ttf',
         r'C:\Windows\Fonts\DejaVuSans.ttf',
-        r'C:\Windows\Fonts\DejaVuSans-Bold.ttf',
-        # Fallback — included with reportlab
     ]
-    regular = None
-    bold = None
     for p in candidates:
         if os.path.exists(p):
-            name = os.path.splitext(os.path.basename(p))[0]
-            if 'bd' in name.lower() or 'bold' in name.lower():
-                if bold is None:
-                    bold = p
-            else:
-                if regular is None:
-                    regular = p
-    return regular, bold
+            return p
+    return None
 
 
 @bp.route('/report', methods=['GET', 'POST'])
@@ -456,12 +454,11 @@ def report():
         selected_appliance = Appliance.query.get(app_id)
 
         if selected_appliance and selected_year:
-            # Supplies in selected year
+            # считаем поставки и продажи за выбранный год
             supplies = Supply.query.filter(
                 Supply.id_model == app_id,
                 db.extract('year', Supply.operation_date) == selected_year
             ).all()
-            # Sales in selected year
             sales = Sale.query.filter(
                 Sale.id_model == app_id,
                 db.extract('year', Sale.sale_date) == selected_year
@@ -507,15 +504,15 @@ def report_pdf():
     total_purchased_sum = sum(s.unit_price * s.quantity for s in supplies)
     total_sold_sum = sum(s.sale_price for s in sales)
 
-    # Build PDF
+    # собираем pdf-документ
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=A4,
                             rightMargin=30, leftMargin=30,
                             topMargin=40, bottomMargin=30)
 
-    regular_font, bold_font = _find_font()
-    if regular_font:
-        pdfmetrics.registerFont(TTFont('CyrFont', regular_font))
+    font_path = _find_font()
+    if font_path:
+        pdfmetrics.registerFont(TTFont('CyrFont', font_path))
         font_name = 'CyrFont'
     else:
         font_name = 'Helvetica'
@@ -523,17 +520,12 @@ def report_pdf():
     styles = getSampleStyleSheet()
     title_style = ParagraphStyle('TitleRU', parent=styles['Title'],
                                  fontName=font_name, fontSize=16, spaceAfter=20)
-    normal_style = ParagraphStyle('NormalRU', parent=styles['Normal'],
-                                  fontName=font_name, fontSize=11)
 
     elements = []
-
-    # Title
     title = f'О реализации {appliance.name} в {year} г.'
     elements.append(Paragraph(title, title_style))
     elements.append(Spacer(1, 12))
 
-    # Table
     headers = ['Модель', 'Фирма-производитель', 'Кол-во\nприобретённого',
                'Кол-во\nпроданного', 'Сумма\nприобретённого', 'Сумма\nпроданного']
     data_row = [

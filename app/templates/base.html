@@ -6,9 +6,28 @@
     <title>{% block title %}Панель управления магазином{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body { background: #f0f2f5; }
+        .navbar { background: #1a2030 !important; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+        .navbar-brand { font-weight: 600; letter-spacing: .5px; }
+        .card { border: none; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+        .card-header { border-radius: 10px 10px 0 0 !important; font-weight: 500; }
+        .stat-card { transition: transform .15s; cursor: pointer; }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.12); }
+        .stat-card .card-body { padding: .75rem 1rem; }
+        .stat-card .bi { font-size: 1.6rem; }
+        .stat-card h3 { font-size: 1.4rem; margin: 0; font-weight: 600; }
+        .stat-card p { font-size: .75rem; margin: 0; opacity: .85; }
+        .table { margin-bottom: 0; }
+        .table th { font-weight: 500; font-size: .85rem; }
+        .table td { font-size: .88rem; vertical-align: middle; }
+        .btn-sm { font-size: .8rem; }
+        .chart-container { position: relative; height: 200px; }
+        .chart-container canvas { max-height: 200px; }
+    </style>
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark mb-3">
         <div class="container-fluid">
             <a class="navbar-brand" href="{{ url_for('main.index') }}">
                 <i class="bi bi-shop"></i> ShopManager
@@ -32,9 +51,9 @@
 
     <div class="container-fluid px-4">
         {% for cat, msg in get_flashed_messages(with_categories=true) %}
-        <div class="alert alert-{{ cat }} alert-dismissible fade show" role="alert">
+        <div class="alert alert-{{ cat }} alert-dismissible fade show py-2" role="alert">
             {{ msg }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close py-2" data-bs-dismiss="alert"></button>
         </div>
         {% endfor %}
 
@@ -42,5 +61,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    {% block scripts %}{% endblock %}
 </body>
 </html>

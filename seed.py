@@ -1,4 +1,4 @@
-"""Скрипт инициализации БД — создаёт таблицы и наполняет тестовыми данными."""
+"""скрипт инициализации бд - создаёт таблицы и наполняет тестовыми данными"""
 
 from app import create_app, db
 from app.models import (
@@ -14,7 +14,7 @@ def seed():
         db.drop_all()
         db.create_all()
 
-        # ── Категории (C5) ──────────────────────────
+        # категории (c5)
         cat_electronics = Category(name='Электроника')
         cat_computers = Category(name='Компьютеры', parent=cat_electronics)
         cat_laptops = Category(name='Ноутбуки', parent=cat_computers)
@@ -22,14 +22,14 @@ def seed():
         cat_audio = Category(name='Аудиотехника', parent=cat_electronics)
         db.session.add_all([cat_electronics, cat_computers, cat_laptops, cat_smartphones, cat_audio])
 
-        # ── Производители (C7) ──────────────────────
+        # производители (c7)
         mfr_apple = Manufacturer(name='Apple Inc.', legal_address='1 Apple Park Way, Cupertino, CA')
         mfr_samsung = Manufacturer(name='Samsung Electronics', legal_address='129 Samsung-ro, Suwon, South Korea')
         mfr_lenovo = Manufacturer(name='Lenovo Group', legal_address='6 Changi Business Park, Singapore')
         mfr_sony = Manufacturer(name='Sony Corporation', legal_address='1-7-1 Konan, Minato-ku, Tokyo')
         db.session.add_all([mfr_apple, mfr_samsung, mfr_lenovo, mfr_sony])
 
-        # ── Техника (C1) ────────────────────────────
+        # техника (c1)
         app_mbp = Appliance(name='MacBook Pro 14" M3', category=cat_laptops, manufacturer=mfr_apple,
                             service_life=60, stock_quantity=12)
         app_galaxy = Appliance(name='Samsung Galaxy S24', category=cat_smartphones, manufacturer=mfr_samsung,
@@ -42,7 +42,7 @@ def seed():
                                service_life=36, stock_quantity=20)
         db.session.add_all([app_mbp, app_galaxy, app_thinkpad, app_wh1000, app_iphone])
 
-        # ── Дополнительные опции (C2) ───────────────
+        # доп. опции (c2)
         opts = [
             ExtraOption(id_model=1, option='Garantia extendida 3 años'),
             ExtraOption(id_model=1, option='Teclado retroiluminado'),
@@ -55,7 +55,7 @@ def seed():
         ]
         db.session.add_all(opts)
 
-        # ── Поставки (C4) ───────────────────────────
+        # поставки (c4)
         supplies = [
             Supply(id_model=1, operation_date=datetime(2026, 1, 15), unit_price=1800.0, quantity=10, supplier='Apple Distributor GmbH'),
             Supply(id_model=2, operation_date=datetime(2026, 2, 10), unit_price=750.0, quantity=25, supplier='Samsung C&T'),
@@ -67,7 +67,7 @@ def seed():
         ]
         db.session.add_all(supplies)
 
-        # ── Продавцы (C6) ───────────────────────────
+        # продавцы (c6)
         sellers = [
             Seller(first_name='Иван', last_name='Петров', email='ivan.petrov@shop.ru', salary=65000.0, hire_date=date(2024, 3, 1)),
             Seller(first_name='Мария', last_name='Сидорова', email='maria.sidorova@shop.ru', salary=72000.0, hire_date=date(2023, 11, 15)),
@@ -75,7 +75,7 @@ def seed():
         ]
         db.session.add_all(sellers)
 
-        # ── Продажи (C3) ────────────────────────────
+        # продажи (c3)
         sales = [
             Sale(id_model=1, id_seller=1, sale_price=2199.0, sale_date=datetime(2026, 4, 10), warranty_period=24, coupon_number='WRN-001'),
             Sale(id_model=2, id_seller=2, sale_price=899.0, sale_date=datetime(2026, 4, 15), warranty_period=12, coupon_number='WRN-002'),
@@ -87,15 +87,15 @@ def seed():
         db.session.add_all(sales)
 
         db.session.commit()
-        print('[OK] База данных создана и наполнена тестовыми данными.')
-        print(f'   Таблицы: {list(db.metadata.tables.keys())}')
-        print(f'   Категорий:     {Category.query.count()}')
-        print(f'   Производителей: {Manufacturer.query.count()}')
-        print(f'   Техники:       {Appliance.query.count()}')
-        print(f'   Доп. опций:    {ExtraOption.query.count()}')
-        print(f'   Поставок:      {Supply.query.count()}')
-        print(f'   Продавцов:     {Seller.query.count()}')
-        print(f'   Продаж:        {Sale.query.count()}')
+        print('[OK] база данных создана и наполнена тестовыми данными.')
+        print(f'   таблицы: {list(db.metadata.tables.keys())}')
+        print(f'   категорий:     {Category.query.count()}')
+        print(f'   производителей: {Manufacturer.query.count()}')
+        print(f'   техники:       {Appliance.query.count()}')
+        print(f'   доп. опций:    {ExtraOption.query.count()}')
+        print(f'   поставок:      {Supply.query.count()}')
+        print(f'   продавцов:     {Seller.query.count()}')
+        print(f'   продаж:        {Sale.query.count()}')
 
 
 if __name__ == '__main__':
