@@ -1,10 +1,17 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+import io
+from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file
 from app import db
 from app.models import (
     Appliance, Category, Manufacturer, ExtraOption,
     Supply, Seller, Sale
 )
 from datetime import datetime
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 
 bp = Blueprint('main', __name__)
 
@@ -406,3 +413,159 @@ def sale_delete(id):
     db.session.commit()
     flash('Продажа отменена', 'success')
     return redirect(url_for('main.sale_list'))
+
+
+# ══════════════════════════════════════════════
+#  ОТЧЁТ
+# ══════════════════════════════════════════════
+def _find_font():
+    """Try to register a TTF font that supports Cyrillic for reportlab."""
+    import os
+    candidates = [
+        # Windows
+        r'C:\Windows\Fonts\arial.ttf',
+        r'C:\Windows\Fonts\arialbd.ttf',
+        r'C:\Windows\Fonts\DejaVuSans.ttf',
+        r'C:\Windows\Fonts\DejaVuSans-Bold.ttf',
+        # Fallback — included with reportlab
+    ]
+    regular = None
+    bold = None
+    for p in candidates:
+        if os.path.exists(p):
+            name = os.path.splitext(os.path.basename(p))[0]
+            if 'bd' in name.lower() or 'bold' in name.lower():
+                if bold is None:
+                    bold = p
+            else:
+                if regular is None:
+                    regular = p
+    return regular, bold
+
+
+@bp.route('/report', methods=['GET', 'POST'])
+def report():
+    appliances = Appliance.query.order_by(Appliance.name).all()
+    result = None
+    selected_appliance = None
+    selected_year = None
+
+    if request.method == 'POST':
+        app_id = request.form.get('appliance_id', type=int)
+        selected_year = request.form.get('year', type=int)
+        selected_appliance = Appliance.query.get(app_id)
+
+        if selected_appliance and selected_year:
+            # Supplies in selected year
+            supplies = Supply.query.filter(
+                Supply.id_model == app_id,
+                db.extract('year', Supply.operation_date) == selected_year
+            ).all()
+            # Sales in selected year
+            sales = Sale.query.filter(
+                Sale.id_model == app_id,
+                db.extract('year', Sale.sale_date) == selected_year
+            ).all()
+
+            total_purchased_qty = sum(s.quantity for s in supplies)
+            total_sold_qty = len(sales)
+            total_purchased_sum = sum(s.unit_price * s.quantity for s in supplies)
+            total_sold_sum = sum(s.sale_price for s in sales)
+
+            result = {
+                'model': selected_appliance.name,
+                'manufacturer': selected_appliance.manufacturer.name,
+                'purchased_qty': total_purchased_qty,
+                'sold_qty': total_sold_qty,
+                'purchased_sum': total_purchased_sum,
+                'sold_sum': total_sold_sum,
+                'year': selected_year,
+            }
+
+    return render_template('report.html', appliances=appliances,
+                           result=result, selected_appliance=selected_appliance,
+                           selected_year=selected_year)
+
+
+@bp.route('/report/pdf', methods=['POST'])
+def report_pdf():
+    app_id = request.form.get('appliance_id', type=int)
+    year = request.form.get('year', type=int)
+    appliance = Appliance.query.get_or_404(app_id)
+
+    supplies = Supply.query.filter(
+        Supply.id_model == app_id,
+        db.extract('year', Supply.operation_date) == year
+    ).all()
+    sales = Sale.query.filter(
+        Sale.id_model == app_id,
+        db.extract('year', Sale.sale_date) == year
+    ).all()
+
+    total_purchased_qty = sum(s.quantity for s in supplies)
+    total_sold_qty = len(sales)
+    total_purchased_sum = sum(s.unit_price * s.quantity for s in supplies)
+    total_sold_sum = sum(s.sale_price for s in sales)
+
+    # Build PDF
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=A4,
+                            rightMargin=30, leftMargin=30,
+                            topMargin=40, bottomMargin=30)
+
+    regular_font, bold_font = _find_font()
+    if regular_font:
+        pdfmetrics.registerFont(TTFont('CyrFont', regular_font))
+        font_name = 'CyrFont'
+    else:
+        font_name = 'Helvetica'
+
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle('TitleRU', parent=styles['Title'],
+                                 fontName=font_name, fontSize=16, spaceAfter=20)
+    normal_style = ParagraphStyle('NormalRU', parent=styles['Normal'],
+                                  fontName=font_name, fontSize=11)
+
+    elements = []
+
+    # Title
+    title = f'О реализации {appliance.name} в {year} г.'
+    elements.append(Paragraph(title, title_style))
+    elements.append(Spacer(1, 12))
+
+    # Table
+    headers = ['Модель', 'Фирма-производитель', 'Кол-во\nприобретённого',
+               'Кол-во\nпроданного', 'Сумма\nприобретённого', 'Сумма\nпроданного']
+    data_row = [
+        appliance.name,
+        appliance.manufacturer.name,
+        str(total_purchased_qty),
+        str(total_sold_qty),
+        f'{total_purchased_sum:,.2f}',
+        f'{total_sold_sum:,.2f}',
+    ]
+    table_data = [headers, data_row]
+
+    table = Table(table_data, colWidths=[90, 110, 70, 70, 80, 80])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2c3e50')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('FONTNAME', (0, 0), (-1, -1), font_name),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('FONTSIZE', (0, 1), (-1, -1), 10),
+        ('ALIGN', (2, 0), (-1, -1), 'CENTER'),
+        ('ALIGN', (0, 0), (1, -1), 'LEFT'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f5f5f5')]),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    elements.append(table)
+
+    doc.build(elements)
+    buf.seek(0)
+
+    filename = f'report_{appliance.name.replace(" ", "_")}_{year}.pdf'
+    return send_file(buf, mimetype='application/pdf', as_attachment=True,
+                     download_name=filename)
